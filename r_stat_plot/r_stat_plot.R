@@ -4,6 +4,12 @@
 # 主要功能为绘图: plot_xx_1
 
 # #####################################################
+# ################# 主题和颜色 ########################
+# #####################################################
+
+
+
+# #####################################################
 # ################# 定义的函数 ########################
 # #####################################################
 ## 1. alpha多样性计算
@@ -112,106 +118,62 @@ plot_pcoa_1 <- function(data,sd,prefix) {
   ggsave(paste0(prefix,"_pcoaWithLabel.pdf"),p2,width = 12,height = 12)
 }
 
-## 3. 
+## 3. 柱状图[显著性标注,针对1里面计算得到的alpha数据表]
+plot_bar_1 <- function(data,group_file,target,ymax = 10) {
+  "
+  @功能: 柱状图
+  @参数data: factor组成表,第一列为样本,后面几列是factor数据
+  @参数group_file: 分组文件,只支持1个分组方式,即第1列为样本,第2列为分组方案
+  @参数target: 对哪个factor作图,即参数data的列名
+  @参数ymax: 绘制多组时,有kw检验结果,放置图上垂直的位置
+  "
+  library(ggplot2)
+  library(tidyr)
+  library(ggpubr)
+  names(data)[1] <- c("sample")
+  names(group_file) <- c("sample","group")
+  dataCom<-merge(data,group_file,by.x='sample', by.y='sample')
+  group_info <- unique(dataCom$group)
+  dataCom$group <- factor(dataCom$group, 
+                          levels = group_info)
+  # 生成两两比较的list
+  num <- length(group_info)
+  compare_list <- vector("list", 0)
+  n <- 0
+  for (i in 1:(num-1)) {
+    for (j in (i+1):num) {
+      n <- n + 1
+      compare_list[[n]] <- c(group_info[[i]],
+                             group_info[[j]])
+    }
+  }
+  # 确定多组kw检验的p值在图上的摆放位置
+  colDef=c("#dc4c43","#4b8ac0","#e6811d","#228a58","#8e48d8","#6d6d6d")
+  p1 <- 
+    ggplot(dataCom, aes(as.factor(group), dataCom[[target]], fill=group)) + 
+    stat_boxplot(geom = "errorbar", width = 0.1) +
+    geom_boxplot(aes(fill = group), width = 0.2, show.legend = F) + 
+    scale_fill_manual(values=colDef) + 
+    theme_bw() +
+    theme(axis.text.y = element_text(size = 12, face = "plain"),
+          axis.title.y = element_text(size = 16, face = "plain"),
+          axis.title.x = element_blank(),
+          axis.text.x = element_text(size = 12, face = "plain"),
+          axis.ticks.x = element_blank(),
+          panel.border = element_blank(), 
+          axis.line = element_line(colour = "black", size = 1),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank()) + 
+    labs(y = target, col = "group") + 
+    stat_compare_means(method = "wilcox.test", 
+                       comparisons = compare_list,
+                       label = "p.signif")
+  
+  if (num == 2) {
+    return(p1)
+  } else {
+    p1 <- p1 + stat_compare_means(label.y = ymax)
+    return(p1)
+  }
+}
 
-# #####################################################
-# ################# 函数的demo测试 ####################
-# #####################################################
-## 0. 所有的demo测试数据都在此文件夹中
-setwd("F:/Wanjin-Project/pipe_script/r_stat_plot/demo_data/")
-## 0. 如果函数保留导出结果功能，则保存在自己设定的目录中,否则保存在该目录中
-demo_result <- "F:/Wanjin-Project/pipe_script/r_stat_plot/demo_data/demo_result/"
-## -------------------------------------------------------------------------------
-## 1. alpha多样性计算
-otu <- read.delim("06_metaphlan_species.txt", 
-                  row.names = 1, 
-                  sep = '\t', 
-                  stringsAsFactors = FALSE, 
-                  check.names = FALSE)
-otu <- t(otu)
-alpha_all <- stat_alpha_1(otu, base = 2)
-write.csv(alpha_all, paste0(demo_result,"alpha.csv"), quote = FALSE)
-## -------------------------------------------------------------------------------
-## 2. beta_pcoa绘图
-data <- read.delim("06_metaphlan_species.txt",
-                   sep = "\t",
-                   header = T,
-                   check.names = FALSE,
-                   row.names = 1)
-# 读取分组文件
-group <- read.delim("group.txt",
-                    header = T,
-                    sep = "\t",
-                    check.names = F)
-# 选择哪个分组方案[sample group],分析前做好选择,可以是其他方法
-group_target <- data.frame(group[,c(1:2)])
-plot_pcoa_1(data = data, sd = group_target, prefix = "test")
-## -------------------------------------------------------------------------------
-
-
-library(ggplot2)
-library(tidyr)
-library(ggpubr)
-setwd("F:/03-Dipro项目/11-张瑞-宏基因组-犬类/analysis/00_alpha/")
-data <- read.csv("alpha.csv", header = T, check.names = F)
-group <- read.table("../group2.txt", sep="\t", header = T)
-dataCom<-merge(data,group,by.x='sample', by.y='sample')
-colDef=c("#dc4c43","#4b8ac0","#e6811d","#228a58","#8e48d8","#6d6d6d")
-
-# shannon指数
-p1 <- 
-  ggplot(dataCom, aes(as.factor(group), Shannon, fill=group)) + 
-  stat_boxplot(geom = "errorbar", width = 0.1) +
-  geom_boxplot(aes(fill = group), width = 0.2, show.legend = F) + 
-  scale_fill_manual(values=colDef) + 
-  theme_bw() +
-  theme(axis.text.y = element_text(size = 12, face = "plain"),
-        axis.title.y = element_text(size = 16, face = "plain"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 12, face = "plain"),
-        axis.ticks.x = element_blank(),
-        panel.border = element_blank(), 
-        axis.line = element_line(colour = "black", size = 1),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) + 
-  labs(y = "Shannon", col = "group") + 
-  stat_compare_means(method = "wilcox.test", 
-                     comparisons = list(c('Chinese Pastoral Dog','German shepherds'),
-                                        c('Chinese Pastoral Dog','Golden Retriever'),
-                                        c('Chinese Pastoral Dog','Kunming Dog'),
-                                        c('German shepherds','Golden Retriever'),
-                                        c('German shepherds','Kunming Dog'),
-                                        c('Golden Retriever','Kunming Dog')),
-                     label = "p.signif") +
-  stat_compare_means(label.y = 8)
-# Simpson指数
-p2 <- 
-  ggplot(dataCom, aes(as.factor(group), Simpson, fill=group)) + 
-  # geom_violin(trim = FALSE, color="white") + 
-  stat_boxplot(geom = "errorbar", width = 0.1) +
-  geom_boxplot(aes(fill = group), width = 0.2, show.legend = F) + 
-  scale_fill_manual(values=colDef) + 
-  theme_bw() +
-  theme(axis.text.y = element_text(size = 12, face = "plain"),
-        axis.title.y = element_text(size = 16, face = "plain"),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 12, face = "plain"),
-        axis.ticks.x = element_blank(),
-        panel.border = element_blank(), axis.line = element_line(colour = "black", size = 1),
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) + 
-  labs(y = "Simpson", col = "group") + 
-  stat_compare_means(method = "wilcox.test", 
-                     comparisons = list(c('Chinese Pastoral Dog','German shepherds'),
-                                        c('Chinese Pastoral Dog','Golden Retriever'),
-                                        c('Chinese Pastoral Dog','Kunming Dog'),
-                                        c('German shepherds','Golden Retriever'),
-                                        c('German shepherds','Kunming Dog'),
-                                        c('Golden Retriever','Kunming Dog')),
-                     label = "p.signif") +
-  stat_compare_means(label.y = 1.4)
-
-p <- ggarrange(p1, p2, ncol = 2, nrow = 1)
-pdf("alpha_species.pdf",width = 20)
-p
-dev.off()
