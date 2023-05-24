@@ -2,6 +2,7 @@
 ## 方式: 定义具体的函数,处理具体问题,函数命名规则如下:
 # 主要功能为数据处理: stat_xx_1
 # 主要功能为绘图: plot_xx_1
+# 函数都设计为返回值的形式,避免直接生成文件
 
 # #####################################################
 # ################# 主题和颜色 ########################
@@ -33,12 +34,11 @@ stat_alpha_1 <- function(x, tree = NULL, base = 2) {
 }
 
 ## 2. beta_pcoa绘图
-plot_pcoa_1 <- function(data,sd,prefix) {
+plot_pcoa_1 <- function(data,sd) {
   "
   @功能: beta多样性计算/pcoa绘图
-  @参数data: 读入的物种组成表
+  @参数data: 读入的组成表
   @参数sd: 读入的分组文件表
-  @参数prefix: 导出结果的前缀
   "
   library(vegan)
   library(ggpubr)
