@@ -21,6 +21,8 @@ class KeggCount(object):
         # self.KO = r"F:\Dipro-Project\metagenome\KEGG_KO.txt"    # 宏基因组分析得到的非冗余基因集对应的KO基因信息表【示例】
         # self.pathway = r"F:\Dipro-Project\metagenome\KEGG_PATHWAY.txt"  # 宏基因组分析得到的非冗余基因集对应的ko的通路信息表【示例】
         # self.sample_merge = r"F:\Dipro-Project\metagenome\merged_file.txt"  # 宏基因组分析得到的非冗余基因集在样本中的分布表【示例】
+        if not os.path.exists(args.tmp):
+            os.mkdir(args.tmp)
         
     def KO_count(self,df_gene,df_ko):
         """
@@ -70,12 +72,34 @@ class KeggCount(object):
                         # print("{} not in kegg_db".format(KO_ids))
             f3.close()
         # tmp_KO.txt包含了所有冗余的KO信息，这一步需要对相同的KO求和合并
-        # KO_samples.csv是后续去分析的KO组成表
         KO_tmp = pd.read_csv("tmp_KO.txt", header=0, sep="\t")
         cols = KO_tmp.columns[2:]
         KO_tmp_1 = KO_tmp.groupby("KO")[cols].sum(numeric_only=True)
-        # KO_tmp_1.to_csv("KO_samples.csv",index=True)
-        KO_tmp_1.to_csv(args.outKO,index=True)
+        # 这里用了一个笨方法，重新打开文件进行匹配
+        KO_tmp_1.to_csv("KO.txt", header=True, index=True, sep="\t")
+        with open("KO.txt", 'r') as f4, open(self.kegg_db, 'r') as f5, open(args.outKO,'w') as f6:
+            sample_line = f4.readline()
+            sample_line = sample_line.strip().split("\t")
+            db_line = f5.readline()
+            a_dict = {}
+            for line in f4:
+                line = line.strip().split('\t')
+                a_dict[line[0]] = line[1:]
+            b_dict = {}
+            for line in f5:
+                line = line.strip().split('\t')
+                b_dict[line[0]] = line[1:3]
+            sam_list = sample_line[1:]
+            f6.write("KO_name\tKO_des\tKO"+"\t"+"\t".join(sam_list) + "\n")
+            for k,v in a_dict.items():
+                KO_ids = k
+                if KO_ids in b_dict:
+                    res_line = b_dict[KO_ids][0]+"\t"+b_dict[KO_ids][1]+"\t"+KO_ids+"\t"+"\t".join(v)
+                    f6.write(res_line+"\n")
+                else:
+                    continue
+            f6.close()
+        os.system("mv df_gene_ko.txt tmp_KO.txt KO.txt {}".format(args.tmp))
     
     def path_conut(self,df_gene,df_pathway):
         """
@@ -131,12 +155,34 @@ class KeggCount(object):
                             # print("{} not in kegg_db".format(path_ids))
             f3.close()
         # tmp_pathway.txt包含了所有冗余的pathway信息，这一步需要对相同的pathway求和合并
-        # pathway_samples.csv是后续去分析的pathway组成表
         pathway_tmp = pd.read_csv("tmp_pathway.txt", header=0, sep="\t")
         cols = pathway_tmp.columns[3:]
         KO_tmp_1 = pathway_tmp.groupby("pathway")[cols].sum(numeric_only=True)
-        # KO_tmp_1.to_csv("pathway_samples.csv",index=True)
-        KO_tmp_1.to_csv(args.outPathway,index=True)
+        # 这里用了一个笨方法，重新打开文件进行匹配
+        KO_tmp_1.to_csv("kegg.txt", header=True, index=True, sep="\t")
+        with open("kegg.txt", 'r') as f4, open(self.kegg_pathway, 'r') as f5, open(args.outPathway,'w') as f6:
+            sample_line = f4.readline()
+            sample_line = sample_line.strip().split("\t")
+            db_line = f5.readline()
+            a_dict = {}
+            for line in f4:
+                line = line.strip().split('\t')
+                a_dict[line[0]] = line[1:]
+            b_dict = {}
+            for line in f5:
+                line = line.strip().split('\t')
+                b_dict[line[0]] = line[1:]
+            sam_list = sample_line[1:]
+            f6.write("level1\tlevel2\tlevel3\tpathway"+"\t"+"\t".join(sam_list) + "\n")
+            for k,v in a_dict.items():
+                path_ids = k
+                if path_ids in b_dict:
+                    res_line = b_dict[path_ids][0]+"\t"+b_dict[path_ids][1]+"\t"+b_dict[path_ids][2]+"\t"+path_ids+"\t"+"\t".join(v)
+                    f6.write(res_line+"\n")
+                else:
+                    continue
+            f6.close()
+        os.system("mv df_gene_pathway.txt tmp_pathway.txt kegg.txt {}".format(args.tmp))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="kegg",
@@ -149,9 +195,11 @@ if __name__ == "__main__":
     parser.add_argument('-mt', '--merge_table', dest="mergeTable",
                         type=str, required=True, help="Sample's merged gene count table, such as merged_file.txt")
     parser.add_argument('-ok', '--out_KO', dest="outKO",
-                        type=str, required=True, help="输出的KO结果表(csv)")
+                        type=str, required=True, help="Output KO result, such as out_KO.xls")
     parser.add_argument('-op', '--out_pathway', dest="outPathway",
-                        type=str, required=True, help="输出的pathway结果表(csv)")
+                        type=str, required=True, help="Output pathway result, such as out_pathway.xls")
+    parser.add_argument('-t', '--tmp', dest="tmp",
+                        type=str, required=False, default="tmp", help="Tmp files dir")
     args = parser.parse_args()
     df_gene = pd.read_csv(args.mergeTable, header=0, sep="\t")
     df_ko = pd.read_csv(args.keggKO, header=0, sep="\t")

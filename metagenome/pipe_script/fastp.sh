@@ -1,6 +1,6 @@
 #! /bin/bash
 
-fastp -i $1 -o $2 -I $3 -O $4 -w 8 -h $5 -j $6
+/root/miniconda3/bin/fastp -i $1 -o $2 -I $3 -O $4 -w 8 -h $5 -j $6
 
 ## demo
 # fastp -i DBYX1FB_1.fastq.gz \

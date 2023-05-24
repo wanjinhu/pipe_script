@@ -1,10 +1,13 @@
 #! /bin/bash
 
+# /root/biosoft/cd-hit-v4.8.1-2019-0228/cd-hit
 cd-hit -i $1 -o $2 -c 0.95 -T 8 -n 5 -d 0 -aS 0.9 -g 1 -sc 1 -sf 1 -M 0
 grep '>' $2|awk -F ' ' '{print $1}'|sed 's/>//g' > $3
-seqtk subseq $4 $3 > $5
+/root/miniconda3/bin/seqtk subseq $4 $3 > $5
+# /root/biosoft/bwa/bwa
 bwa index $5 -p $6
 echo -e "gene\tlength" > $7
+# /root/biosoft/bioawk/bioawk
 bioawk -c fastx '{print $name, length($seq)}' $5 >> $7
 
 ## demo

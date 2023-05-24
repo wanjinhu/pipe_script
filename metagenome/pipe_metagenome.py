@@ -40,6 +40,11 @@ class PipeMetagenome(object):
         if not os.path.exists(args.outDir):
             os.mkdir(args.outDir)
             self.log = open((args.outDir + "/run.log"),mode="a",encoding="utf-8")
+        self.result_path = os.path.join(args.outDir,"00-result")
+        if os.path.exists(self.result_path):
+            pass
+        else:
+            os.makedirs(self.result_path, 0o755)
         self.fastp_path = os.path.join(args.outDir,"01-fastp_trim")
         if os.path.exists(self.fastp_path):
             pass
@@ -132,6 +137,7 @@ class PipeMetagenome(object):
             sam_name = k
             sam_ref_remove_path = os.path.join(self.ref_remove_path,sam_name)
             if os.path.exists(sam_ref_remove_path):
+                os.system("rm -rf {}/*.sam".format(sam_ref_remove_path))
                 continue
             else:
                 os.makedirs(sam_ref_remove_path,0o755)
@@ -153,6 +159,7 @@ class PipeMetagenome(object):
                                                              sam_r2_unmap,
                                                              sam_unmap_single)
                 os.system(command=cmd)
+                os.system("rm -rf {}".format(sam_ref_sam))
                 print(cmd,file=self.log)
                 print("Ref sequence remove finished: {}, check result dir: {}".format(sam_name,sam_ref_remove_path))
         print("All ref sequence remove finished, check dir: {}".format(self.ref_remove_path))
@@ -189,6 +196,7 @@ class PipeMetagenome(object):
         metaphlan_genus = self.metaphlan_path + "/05_metaphlan_genus.txt"
         metaphlan_species = self.metaphlan_path + "/06_metaphlan_species.txt"
         if os.path.exists(metaphlan_merge):
+            os.system("cp {}/*.txt {}".format(self.metaphlan_path,self.result_path))
             pass
         else:  
             cmd1 = "{} {}/*/*.tsv > {}".format(self.metaphlan_merge,self.metaphlan_path,metaphlan_merge)
@@ -204,6 +212,7 @@ class PipeMetagenome(object):
                                                     metaphlan_genus,
                                                     metaphlan_species)
             os.system(command=cmd2)
+            os.system("cp {}/*.txt {}".format(self.metaphlan_path,self.result_path))
             print(cmd2,file=self.log)
         print("Metaphlan merge finished, check dir: {}".format(self.metaphlan_path))
     
@@ -215,6 +224,7 @@ class PipeMetagenome(object):
             sam_name = k
             sam_megahit_path = os.path.join(self.megahit_path,sam_name)
             if os.path.exists(sam_megahit_path):
+                os.system("rm -rf {}/intermediate_contigs".format(sam_megahit_path))
                 continue
             else:
                 # os.makedirs(sam_megahit_path,0o755) # megahit运行输出文件夹不能为已有的
@@ -231,6 +241,7 @@ class PipeMetagenome(object):
                                                        sam_contig,
                                                        sam_contig_500)
                 os.system(command=cmd)
+                os.system("rm -rf {}/intermediate_contigs".format(sam_megahit_path))
                 print(cmd,file=self.log)
                 print("Megahit finished: {}, check result dir: {}".format(sam_name,sam_megahit_path))
         print("All megahit finished, check dir: {}".format(self.megahit_path))
@@ -356,6 +367,7 @@ class PipeMetagenome(object):
         # 合并样本
         # files = ['DBYX1FB.count', 'DBYX1FB.count.test1', 'DBYX1FB.count.test2']
         if os.path.exists(self.samcount_path + "/merged_file.txt"):
+            print("样本基因丰度文件已经合并, 本次不重新运行! check file: {}/merged_file.txt".format(self.samcount_path))
             pass
         else:
             df_list = [pd.read_csv(f, sep='\t') for f in count_list]
@@ -372,19 +384,24 @@ class PipeMetagenome(object):
         eggnog_KO = self.emapper_path + "/KEGG_KO.txt"
         eggnog_path = self.emapper_path + "/KEGG_PATHWAY.txt"
         merge_file = self.samcount_path + "/merged_file.txt"
-        out_ko = self.kegg_path + "/KO_samples.csv"
-        out_pathway = self.kegg_path + "/pathway_samples.csv"
+        out_ko = self.kegg_path + "/KO_samples.xls"
+        out_pathway = self.kegg_path + "/pathway_samples.xls"
+        tmp_dir = self.kegg_path + "/tmp"
         if os.path.exists(out_pathway):
+            os.system("cp {}/*.xls {}".format(self.kegg_path,self.result_path))
+            print("eggnog_kegg结果已经存在, 本次不重新运行! check dir: {}".format(self.kegg_path))
             pass
         else:
-            cmd = "{} {} -kk {} -kp {} -mt {} -ok {} -op {}".format(self.py_env,
-                                                                    self.kegg_cmd,
-                                                                    eggnog_KO,
-                                                                    eggnog_path,
-                                                                    merge_file,
-                                                                    out_ko,
-                                                                    out_pathway)
+            cmd = "{} {} -kk {} -kp {} -mt {} -ok {} -op {} -t {}".format(self.py_env,
+                                                                          self.kegg_cmd,
+                                                                          eggnog_KO,
+                                                                          eggnog_path,
+                                                                          merge_file,
+                                                                          out_ko,
+                                                                          out_pathway,
+                                                                          tmp_dir)
             os.system(command=cmd)
+            os.system("cp {}/*.xls {}".format(self.kegg_path,self.result_path))
             print(cmd,file=self.log)
             print("eggnog-kegg finished, check dir: {}".format(self.kegg_path))
         
@@ -402,7 +419,16 @@ class PipeMetagenome(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="PipeMetagenome",
-                                     usage="python pipe_metagenome.py --fastq_list fq.list --output_dir result --ref /root/database/Canis_GCF_000002285.5/Canis_GCF_000002285_5",
+                                     usage="\n=================================================================\n"
+                                     "first step: conda activate base\n"
+                                     "python pipe_metagenome.py\n" 
+                                     "\t--fastq_list fq.list\n"
+                                     "\t--output_dir result\n"
+                                     "\t--ref ref_bowtie2_index\n"
+                                     "ref_bowtie2_index:\n"
+                                     "canis: /root/database/Canis_GCF_000002285.5/Canis_GCF_000002285_5\n"
+                                     "human: /root/database/hg38_GCF_000001405.40/GCF_000001405.40/hg38\n"
+                                     "=================================================================",
                                      description="Pipeline of metagenome")
     # fastq_list必须保留表头格式固定为: #Sample R1  R2
     parser.add_argument("-l", "--fastq_list", dest="fqList", required=True, type=str, help="raw fq list")
@@ -411,12 +437,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     run = PipeMetagenome()
     run.main()
-    # run.fastp_trim()
-    # run.ref_remove()
-    # run.metaphlan()
-    # run.megahit()
-    # run.prodigal()
-    # run.cdhit()
-    # run.emapper()
-    # run.sam_gene_count()
-    # run.eggnog_kegg()
