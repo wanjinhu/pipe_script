@@ -19,6 +19,7 @@ stat_alpha_1 <- function(x, tree = NULL, base = 2) {
   @功能: alpha多样性计算
   @参数x: 物种组成表
   @参数tree: 物种序列进化树[如果有的话]
+  @return: alpha结果
   "
   library(vegan)
   library(picante)
@@ -39,6 +40,7 @@ plot_pcoa_1 <- function(data,sd) {
   @功能: beta多样性计算/pcoa绘图
   @参数data: 读入的组成表
   @参数sd: 读入的分组文件表
+  @return: list(pcoa_no_label,pcoa_with_label,pcoa_permanova)
   "
   library(vegan)
   library(ggpubr)
@@ -71,9 +73,9 @@ plot_pcoa_1 <- function(data,sd) {
                    # axis.text.y = element_blank(),
                    #axis.ticks = element_blank(),
                    text = element_text(size=18))
-  #plot.margin = unit(c(1, 0.5, 1, 1), "lines"))
+  # plot.margin = unit(c(1, 0.5, 1, 1), "lines"))
   pc12$group<-factor(pc12$group,levels=levels(sd$group))
-  #p1出的结果是没有label的
+  # p1出的结果是没有label的
   p1 <- ggscatter(pc12, x = "pc_x", y = "pc_y",
                   color = "group", shape = "group", palette = "npg", size=3)+
     ylab(paste0("PCoA",pc_y,"(",round(pc[pc_y],2),"%",")"))+
@@ -83,8 +85,7 @@ plot_pcoa_1 <- function(data,sd) {
     theme(legend.position = "right",legend.title = element_blank())
   p1 <- p1 + stat_ellipse(aes(x = pc_x, y = pc_y, color = group), 
                            linetype = 1, level = 0.95) + mytheme
-  
-  #p2出的结果是有label的
+  # p2出的结果是有label的
   p2 <- ggscatter(pc12, x = "pc_x", y = "pc_y",
                   color = "group", shape = "group", palette = "npg", size=2)+
     ylab(paste0("PCoA",pc_y,"(",round(pc[pc_y],2),"%",")"))+
@@ -95,27 +96,27 @@ plot_pcoa_1 <- function(data,sd) {
     theme(legend.position = "right",legend.title = element_blank())
   p2 <- p2 +  stat_ellipse(aes(x = pc_x, y = pc_y, color = group), 
                            linetype = 1, level = 0.95) + mytheme
-  #利用adonis函数进行PERMANOVA分析，并保存计算文件
+  # 利用adonis函数进行PERMANOVA分析
   ADONIS<-adonis(dist~sd$group)
   TEST<-ADONIS$aov.tab$`Pr(>F)`[1]
   R2adonis<-round(ADONIS$aov.tab$R2[1],digits = 3)
-  sink(paste0(prefix,'_adonis.txt'))
-  print(ADONIS)
-  sink()
-  #将PERMANOVA计算结果分别加入到p1和p2的结果图中，保存为pdf格式的文件
+  # sink(paste0(prefix,'_adonis.txt'))
+  # print(ADONIS)
+  # sink()
+  # 将PERMANOVA计算结果分别加入到p1和p2的结果图中
   xpos<-ggplot_build(p1)$layout$panel_scales_x[[1]]$range$range
   ypos<-ggplot_build(p1)$layout$panel_scales_y[[1]]$range$range
   p1 <- p1 + geom_text(aes(x=xpos[1],y=ypos[2]*1.1),
                        label=paste("PERMANOVA, P","=",TEST,sep = ''),
                        size=6,hjust=0)
-  ggsave(paste0(prefix,"_pcoaNotWithLabel.pdf"),p1,width = 12,height = 12)
-  
   xpos<-ggplot_build(p2)$layout$panel_scales_x[[1]]$range$range
   ypos<-ggplot_build(p2)$layout$panel_scales_y[[1]]$range$range
   p2 <- p2 + geom_text(aes(x=xpos[1],y=ypos[2]*1.1),
                        label=paste("PERMANOVA, P","=",TEST,sep = ''),
                        size=6,hjust=0)
-  ggsave(paste0(prefix,"_pcoaWithLabel.pdf"),p2,width = 12,height = 12)
+  return(list(pcoa_no_label=p1,
+              pcoa_with_label=p2,
+              pcoa_permanova=ADONIS))
 }
 
 ## 3. 柱状图[显著性标注,针对1里面计算得到的alpha数据表]
@@ -126,6 +127,7 @@ plot_bar_1 <- function(data,group_file,target,ymax = 10) {
   @参数group_file: 分组文件,只支持1个分组方式,即第1列为样本,第2列为分组方案
   @参数target: 对哪个factor作图,即参数data的列名
   @参数ymax: 绘制多组时,有kw检验结果,放置图上垂直的位置
+  @return: 柱状图结果
   "
   library(ggplot2)
   library(tidyr)
