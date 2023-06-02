@@ -117,13 +117,13 @@ class PipeMetagenome(object):
                 sam_html = sam_fastp_path + "/{}.html".format(sam_name)
                 sam_json = sam_fastp_path + "/{}.json".format(sam_name)
                 cmd = "{} {} {} {} {} {} {} {}".format(self.bash_env,
-                                                    self.fastp_cmd,
-                                                    sam_r1,
-                                                    sam_r1_clean,
-                                                    sam_r2,
-                                                    sam_r2_clean,
-                                                    sam_html,
-                                                    sam_json)
+                                                       self.fastp_cmd,
+                                                       sam_r1,
+                                                       sam_r1_clean,
+                                                       sam_r2,
+                                                       sam_r2_clean,
+                                                       sam_html,
+                                                       sam_json)
                 os.system(command=cmd)
                 print(cmd,file=self.log)
                 print("Fastp finished: {}, check result dir: {}".format(sam_name,sam_fastp_path))
@@ -203,14 +203,14 @@ class PipeMetagenome(object):
             os.system(command=cmd1)
             print(cmd1,file=self.log)
             cmd2 = "{} {} {} {} {} {} {} {} {}".format(self.bash_env,
-                                                    self.metaphlan_merge_cmd,
-                                                    metaphlan_merge,
-                                                    metaphlan_phylum,
-                                                    metaphlan_class,
-                                                    metaphlan_order,
-                                                    metaphlan_family,
-                                                    metaphlan_genus,
-                                                    metaphlan_species)
+                                                       self.metaphlan_merge_cmd,
+                                                       metaphlan_merge,
+                                                       metaphlan_phylum,
+                                                       metaphlan_class,
+                                                       metaphlan_order,
+                                                       metaphlan_family,
+                                                       metaphlan_genus,
+                                                       metaphlan_species)
             os.system(command=cmd2)
             os.system("cp {}/*.txt {}".format(self.metaphlan_path,self.result_path))
             print(cmd2,file=self.log)
@@ -297,14 +297,14 @@ class PipeMetagenome(object):
             os.system(command=cmd2)
             print(cmd2,file=self.log)
             cmd = "{} {} {} {} {} {} {} {} {}".format(self.bash_env,
-                                                    self.cdhit_cmd,
-                                                    prot_cat,
-                                                    prot_nonerude,
-                                                    nonerude_list,
-                                                    nucl_cat,
-                                                    nucl_nonerude,
-                                                    geneset_bwa,
-                                                    geneset_length)
+                                                      self.cdhit_cmd,
+                                                      prot_cat,
+                                                      prot_nonerude,
+                                                      nonerude_list,
+                                                      nucl_cat,
+                                                      nucl_nonerude,
+                                                      geneset_bwa,
+                                                      geneset_length)
             os.system(command=cmd)
             print(cmd,file=self.log)
             print("CD-HIT finished, check dir: {}".format(self.cdhit_path))
