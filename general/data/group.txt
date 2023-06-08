@@ -1,0 +1,17 @@
+sample	group
+C1	C
+C2	C
+C3	C
+C4	C
+C5	C
+C6	C
+C7	C
+C8	C
+P1	P
+P2	P
+P3	P
+P4	P
+P5	P
+P6	P
+P7	P
+P8	P
