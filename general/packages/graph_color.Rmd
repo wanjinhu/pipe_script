@@ -1,0 +1,67 @@
+---
+title: "graph_color"
+author: "wanjin.hu"
+date: "2023-06-09"
+output: html_document
+---
+
+#### 加载包
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+library(scales)
+library(ggsci)
+```
+
+#### **绘图颜色推荐**
+```{r 柳叶刀配色9种,echo=TRUE}
+colors_lancet <- pal_lancet("lanonc",alpha = 1)(9)
+show_col(colors_lancet)
+```
+
+```{r npg配色10种,echo=TRUE}
+colors_npg <- pal_npg("nrc",alpha = 1)(10)
+show_col(colors_npg)
+```
+
+```{r d3配色,echo=TRUE}
+colors_d3_10 <- pal_d3("category10",alpha = 1)(10)
+show_col(colors_d3_10)
+colors_d3_20 <- pal_d3("category20",alpha = 1)(20)
+show_col(colors_d3_20)
+```
+
+```{r igv配色51种,echo=TRUE}
+colors_igv <- pal_igv("default",alpha = 1)(51)
+show_col(colors_igv)
+```
+
+
+```{r 2种颜色,echo=TRUE}
+colors_2_1 <- c("#156077","#f46f20")
+show_col(colors_2_1)
+colors_2_2 <- c("#4da0a0","#9b3a74")
+show_col(colors_2_2)
+```
+
+```{r 3种颜色,echo=TRUE}
+colors_3_1 <- c("#e20612","#ffd401","#00b0eb")
+show_col(colors_3_1)
+```
+
+```{r 5种颜色,echo=TRUE}
+colors_5_1 <- c("#ef1828","#f88421","#ffbc14","#00bdcd","#006b7b")
+show_col(colors_5_1)
+```
+
+```{r 6种颜色,echo=TRUE}
+colors_6_1 <- c("#3cb346","#00abf0","#d75427","#2e409a","#942d8d","#eeb401")
+show_col(colors_6_1)
+```
+
+```{r 8种有颜色,echo=TRUE}
+colors_8_1 <- c("#cc340c","#e8490f","#f18800","#e4ce00","#9ec417","#13a983","#44c1f0","#3f60aa")
+show_col(colors_8_1)
+```
+
+
