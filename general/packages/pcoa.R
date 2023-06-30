@@ -36,7 +36,7 @@ plot_pcoa <- function(data,sd) {
   pc12 <- merge(pc12,sd,by="sample")
   mex <- 0.2*abs(max(pc12$pc_x)-min(pc12$pc_x))
   mey <- 0.2*abs(max(pc12$pc_y)-min(pc12$pc_y))
-  mytheme <- theme(panel.border = element_rect(color = "black",size = 1.0,fill = NA),
+  mytheme <- theme(panel.border = element_rect(color = "black",linewidth = 1.0,fill = NA),
                    # axis.text.x = element_blank(),
                    # axis.text.y = element_blank(),
                    #axis.ticks = element_blank(),

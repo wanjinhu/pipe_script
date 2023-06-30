@@ -13,9 +13,10 @@ com_plot <- function(tax_lev) {
   @功能: 对格式为<06_metaphlan_species.txt>的物种表做柱状组成图,SGB信息归到Others
   @参数tax_lev: 在哪个水平做组成分析
   "
-  split_data <- strsplit(df$clade_name, ";")
+  df_1 <- df %>% select(clade_name,group$sample)
+  split_data <- strsplit(df_1$clade_name, ";")
   split_data <- do.call("rbind",split_data)
-  cols <- df[, c(2:ncol(df))]
+  cols <- df_1[, c(2:ncol(df_1))]
   df_merge <- do.call("cbind", list(split_data,cols))
   names(df_merge)[1:7] <- c("kindom",
                             "phylum",
@@ -45,6 +46,7 @@ com_plot <- function(tax_lev) {
       group_by(tax[[tax_lev]]) %>% 
       summarise_all(sum) %>%
       rename_at(1, ~ "class")
+    phy <- phy %>% arrange(desc(rowSums(phy[,2:ncol(phy)])))
   } else {
     # 举例如果是class水平，合并包含"_CFGB"为Others
     phy1 <- spe %>%
@@ -60,9 +62,9 @@ com_plot <- function(tax_lev) {
       summarise_all(sum) %>%
       rename_at(1, ~ "class") %>%
       filter(!str_detect(class, mer_lev))
+    phy2 <- phy2 %>% arrange(desc(rowSums(phy2[,2:ncol(phy2)])))
     phy <- rbind(phy1,phy2)
   }
-  
   write.table(phy,
               file = paste0("trim_",tax_lev,".xls"),
               sep = "\t",
@@ -113,6 +115,7 @@ group <- read.table(args$group,
                     header = T,
                     sep = "\t",
                     check.names = F)
+names(group) <- c("sample","group")
 tax <- args$tax
 
 # 颜色设置

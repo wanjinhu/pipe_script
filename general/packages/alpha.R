@@ -53,7 +53,7 @@ plot_bar <- function(data,group_file,target) {
   }
   colDef=c("#dc4c43","#4b8ac0","#e6811d","#228a58","#8e48d8","#6d6d6d")
   p1 <- 
-    ggplot(dataCom, aes(as.factor(group), dataCom[[target]], fill=group)) + 
+    ggplot(dataCom, aes(as.factor(group), .data[[target]], fill=group)) + 
     stat_boxplot(geom = "errorbar", width = 0.1) +
     geom_boxplot(aes(fill = group), width = 0.2, show.legend = F) + 
     scale_fill_manual(values=colDef) + 
